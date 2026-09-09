@@ -1,16 +1,45 @@
 import sql from "mssql/msnodesqlv8";
 import { entorno } from "../../configuracion/entorno";
 
-const configuracion: sql.config = {
+/**
+ * mssql arma la cadena con "SQL Server Native Client 11.0" y siempre anexa el
+ * puerto, lo que falla en equipos que solo tienen los ODBC Driver 17/18 o que
+ * usan memoria compartida. Por eso la construimos a mano.
+ */
+function construirCadenaConexion(): string {
+  const {
+    servidor,
+    puerto,
+    baseDeDatos,
+    driverOdbc,
+    tipoAutenticacion,
+    encrypt,
+    trustServerCertificate,
+  } = entorno.sqlServer;
+
+  const partes = [
+    `Driver={${driverOdbc}}`,
+    `Server=${puerto !== undefined ? `${servidor},${puerto}` : servidor}`,
+    `Database=${baseDeDatos}`,
+    `Encrypt=${encrypt ? "Yes" : "No"}`,
+    `TrustServerCertificate=${trustServerCertificate ? "Yes" : "No"}`,
+  ];
+
+  if (tipoAutenticacion === "windows") partes.push("Trusted_Connection=Yes");
+
+  return `${partes.join(";")};`;
+}
+
+/**
+ * @types/mssql no declara `connectionString` a nivel raíz, pero el driver
+ * msnodesqlv8 sí la lee de ahí (y le da prioridad sobre el resto de la config).
+ */
+type ConfiguracionSqlServer = sql.config & { connectionString: string };
+
+const configuracion: ConfiguracionSqlServer = {
+  connectionString: construirCadenaConexion(),
+  // Requerido por el tipo; se ignora porque manda la cadena de conexión.
   server: entorno.sqlServer.servidor,
-  port: entorno.sqlServer.puerto,
-  database: entorno.sqlServer.baseDeDatos,
-  driver: "msnodesqlv8",
-  options: {
-    trustedConnection: entorno.sqlServer.tipoAutenticacion === "windows",
-    encrypt: entorno.sqlServer.encrypt,
-    trustServerCertificate: entorno.sqlServer.trustServerCertificate,
-  },
   pool: {
     max: 10,
     min: 0,

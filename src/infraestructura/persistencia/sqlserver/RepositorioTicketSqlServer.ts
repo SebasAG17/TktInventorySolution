@@ -19,6 +19,7 @@ export class RepositorioTicketSqlServer
   async crear(ticket: TicketNuevo): Promise<Ticket> {
     const conexion = await ConexionSqlServer.obtenerPool()
 
+    
     const resultado = await conexion
       .request()
       .input('titulo', ticket.titulo)

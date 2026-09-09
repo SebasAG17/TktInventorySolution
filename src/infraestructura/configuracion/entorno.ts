@@ -28,11 +28,24 @@ function portValue(name: string, defaultValue: number): number {
   return port;
 }
 
+function puertoOpcional(name: string): number | undefined {
+  const value = process.env[name]?.trim();
+  if (!value) return undefined;
+
+  const port = Number(value);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error(`${name} debe ser un puerto válido.`);
+  }
+
+  return port;
+}
+
 export const entorno = {
   puertoHttp: portValue("PORT", 3000),
   sqlServer: {
     servidor: required("DB_SERVER"),
-    puerto: portValue("DB_PORT", 1433),
+    driverOdbc: process.env.DB_ODBC_DRIVER?.trim() || "ODBC Driver 17 for SQL Server",
+    puerto: puertoOpcional("DB_PORT"),
     baseDeDatos: required("DB_DATABASE"),
     tipoAutenticacion: process.env.DB_AUTH_TYPE?.trim().toLowerCase() ?? "windows",
     encrypt: booleanValue("DB_ENCRYPT", true),
