@@ -1,7 +1,7 @@
 import type {
   Ticket,
   TicketNuevo,
-} from '../modelo/ticket'
+} from '../modelo/Ticket'
 
 /**
  * Puerto del dominio para acceder a los tickets.

@@ -1,7 +1,7 @@
 import type {
   Ticket,
   TicketNuevo,
-} from '../../../dominio/modelo/ticket'
+} from '../../../dominio/modelo/Ticket'
 
 import type {
   RepositorioTicket,
