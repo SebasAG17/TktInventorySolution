@@ -7,22 +7,28 @@
     "dev": "tsx watch src/main/app.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main/app.js",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "arquitectura": "node scripts/verificar-arquitectura.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.3",
     "msnodesqlv8": "^5.3.0",
-    "mssql": "^11.0.1"
+    "mssql": "^11.0.1",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/mssql": "^9.1.8",
     "@types/node": "^22.13.1",
+    "@types/swagger-ui-express": "^4.1.8",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   },

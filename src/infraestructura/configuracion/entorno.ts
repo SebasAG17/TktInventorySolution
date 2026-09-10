@@ -42,6 +42,7 @@ function puertoOpcional(name: string): number | undefined {
 
 export const entorno = {
   puertoHttp: portValue("PORT", 3000),
+  jwtSecret: required("JWT_SECRET"),
   sqlServer: {
     servidor: required("DB_SERVER"),
     driverOdbc: process.env.DB_ODBC_DRIVER?.trim() || "ODBC Driver 17 for SQL Server",
