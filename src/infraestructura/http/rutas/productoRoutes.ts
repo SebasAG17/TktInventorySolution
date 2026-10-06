@@ -14,5 +14,7 @@ export function productoRoutes(
 
   router.get('/', controller.consultarTodos)
 
+  router.put('/:id', controller.actualizar)
+
   return router
 }
