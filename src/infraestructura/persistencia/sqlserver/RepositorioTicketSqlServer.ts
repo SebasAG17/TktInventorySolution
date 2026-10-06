@@ -4,6 +4,10 @@ import type {
 } from '../../../dominio/modelo/Ticket'
 
 import type {
+  EstadoTicket,
+} from '../../../dominio/modelo/EstadoTicket'
+
+import type {
   RepositorioTicket,
 } from '../../../dominio/puertos/RepositorioTicket'
 
@@ -98,5 +102,32 @@ export class RepositorioTicketSqlServer
       `)
 
     return resultado.recordset[0] ?? null
+  }
+
+  async actualizarEstado(
+    id: number,
+    estado: EstadoTicket,
+  ): Promise<Ticket> {
+    const conexion = await ConexionSqlServer.obtenerPool()
+
+    const resultado = await conexion
+      .request()
+      .input('id', id)
+      .input('estado', estado)
+      .query(`
+        UPDATE Ticket
+        SET estado = @estado
+        OUTPUT
+          INSERTED.id,
+          INSERTED.titulo,
+          INSERTED.descripcion,
+          INSERTED.estado,
+          INSERTED.productoId,
+          INSERTED.cantidad,
+          INSERTED.fechaCreacion
+        WHERE id = @id
+      `)
+
+    return resultado.recordset[0] as Ticket
   }
 }
