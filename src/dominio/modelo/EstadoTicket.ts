@@ -17,7 +17,7 @@ export const TRANSICIONES: Readonly<
   Record<EstadoTicket, readonly EstadoTicket[]>
 > = {
   PENDIENTE: ['APROBADO', 'CANCELADO'],
-  APROBADO: ['ENTREGADO'],
+  APROBADO: ['CANCELADO', 'ENTREGADO'],
   CANCELADO: [],
   ENTREGADO: [],
 }
