@@ -45,12 +45,34 @@ const producto = {
 
 const ticket = {
   type: 'object',
-  description: 'Solicitud de salida de inventario sobre un producto.',
+  description: [
+    'Solicitud de salida de inventario sobre un producto.',
+    '',
+    'Ciclo de vida del ticket:',
+    '',
+    '- `PENDIENTE` puede aprobarse o cancelarse.',
+    '- `APROBADO` puede entregarse o cancelarse.',
+    '- `CANCELADO` y `ENTREGADO` son estados finales.',
+    '',
+    'Los casos de uso `AprobarTicket` y `CancelarTicket` validan estas transiciones antes de guardar el nuevo estado.',
+  ].join('\n'),
   properties: {
     id: { type: 'integer', example: 1 },
     titulo: { type: 'string', example: 'Teclado para sala de juntas' },
     descripcion: { type: 'string', example: 'Reemplazo del equipo dañado' },
-    estado: { type: 'string', enum: ESTADOS_TICKET, example: 'PENDIENTE' },
+    estado: {
+      type: 'string',
+      enum: ESTADOS_TICKET,
+      example: 'PENDIENTE',
+      description: [
+        'Estado actual del ticket.',
+        '',
+        'Transiciones permitidas:',
+        '- `PENDIENTE` → `APROBADO` o `CANCELADO`.',
+        '- `APROBADO` → `ENTREGADO` o `CANCELADO`.',
+        '- `CANCELADO` y `ENTREGADO` no admiten más transiciones.',
+      ].join('\n'),
+    },
     productoId: { type: 'integer', example: 1 },
     cantidad: { type: 'integer', minimum: 1, example: 2 },
     fechaCreacion: { type: 'string', format: 'date-time' },
@@ -136,7 +158,23 @@ export const openapi = {
       description: 'Registro de usuarios, inicio de sesión y consulta del perfil propio.',
     },
     { name: 'Productos', description: 'Catálogo de productos del inventario.' },
-    { name: 'Tickets', description: 'Solicitudes de salida de inventario.' },
+    {
+      name: 'Tickets',
+      description: [
+        'Solicitudes de salida de inventario.',
+        '',
+        'Estados y transiciones de negocio:',
+        '',
+        '| Estado actual | Transiciones permitidas |',
+        '| --- | --- |',
+        '| `PENDIENTE` | `APROBADO`, `CANCELADO` |',
+        '| `APROBADO` | `ENTREGADO`, `CANCELADO` |',
+        '| `CANCELADO` | Ninguna |',
+        '| `ENTREGADO` | Ninguna |',
+        '',
+        'La aprobación y cancelación comprueban estas reglas y rechazan tanto tickets inexistentes como transiciones inválidas.',
+      ].join('\n'),
+    },
   ],
   paths: {
     '/salud': {
@@ -365,6 +403,8 @@ export const openapi = {
       get: {
         tags: ['Tickets'],
         summary: 'Consultar todos los tickets',
+        description:
+          'Devuelve el estado actual de cada solicitud. Consulta la descripción de `TicketDTO` para conocer el ciclo de vida y las transiciones permitidas.',
         responses: {
           200: {
             description: 'Tickets registrados, ordenados por id.',
