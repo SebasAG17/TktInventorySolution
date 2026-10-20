@@ -8,13 +8,26 @@ import {
   esEstadoTicket,
 } from '../../../dominio/modelo/EstadoTicket'
 
+import type { Ticket } from '../../../dominio/modelo/Ticket'
+
 import { CrearTicket } from '../../../aplicacion/casos-uso/tickets/CrearTicket'
 import { ConsultarTickets } from '../../../aplicacion/casos-uso/tickets/ConsultarTickets'
+import { ConsultarTicketPorId } from '../../../aplicacion/casos-uso/tickets/ConsultarTicketPorId'
+import { AprobarTicket } from '../../../aplicacion/casos-uso/tickets/AprobarTicket'
+import { CancelarTicket } from '../../../aplicacion/casos-uso/tickets/CancelarTicket'
+
+import {
+  TicketNoEncontrado,
+  TransicionInvalida,
+} from '../../../aplicacion/casos-uso/tickets/errores'
 
 export class TicketController {
   constructor(
     private readonly crearTicket: CrearTicket,
     private readonly consultarTickets: ConsultarTickets,
+    private readonly consultarTicketPorId: ConsultarTicketPorId,
+    private readonly aprobarTicket: AprobarTicket,
+    private readonly cancelarTicket: CancelarTicket,
   ) {}
 
   crear = async (
@@ -60,6 +73,70 @@ export class TicketController {
     try {
       res.json(await this.consultarTickets.ejecutar())
     } catch (error) {
+      next(error)
+    }
+  }
+
+  consultarPorId = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    await this.responderConTicket(req, res, next, (id) =>
+      this.consultarTicketPorId.ejecutar(id),
+    )
+  }
+
+  aprobar = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    await this.responderConTicket(req, res, next, (id) =>
+      this.aprobarTicket.ejecutar(id),
+    )
+  }
+
+  cancelar = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    await this.responderConTicket(req, res, next, (id) =>
+      this.cancelarTicket.ejecutar(id),
+    )
+  }
+
+  /**
+   * Lo común a las rutas `/:id`: validar el id, ejecutar el
+   * caso de uso y traducir sus errores a códigos HTTP.
+   */
+  private async responderConTicket(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+    accion: (id: number) => Promise<Ticket>,
+  ): Promise<void> {
+    const id = Number(req.params.id)
+
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: 'id inválido' })
+      return
+    }
+
+    try {
+      res.json(await accion(id))
+    } catch (error) {
+      if (error instanceof TicketNoEncontrado) {
+        res.status(404).json({ error: error.message })
+        return
+      }
+
+      if (error instanceof TransicionInvalida) {
+        res.status(409).json({ error: error.message })
+        return
+      }
+
       next(error)
     }
   }
