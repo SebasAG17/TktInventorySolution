@@ -5,6 +5,7 @@ import { entorno } from '../infraestructura/configuracion/entorno'
 
 import { CrearProducto } from '../aplicacion/casos-uso/productos/CrearProducto'
 import { ConsultarProductos } from '../aplicacion/casos-uso/productos/ConsultarProductos'
+import { ActualizarProducto } from '../aplicacion/casos-uso/productos/ActualizarProducto'
 import { CrearTicket } from '../aplicacion/casos-uso/tickets/CrearTicket'
 import { ConsultarTickets } from '../aplicacion/casos-uso/tickets/ConsultarTickets'
 import { ConsultarTicketPorId } from '../aplicacion/casos-uso/tickets/ConsultarTicketPorId'
@@ -44,6 +45,7 @@ const autenticacionController = new AutenticacionController(
 const productoController = new ProductoController(
   new CrearProducto(productos),
   new ConsultarProductos(productos),
+  new ActualizarProducto(productos),
 )
 
 const ticketController = new TicketController(
