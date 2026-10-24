@@ -31,6 +31,8 @@ export interface Usuario {
  */
 export type UsuarioNuevo = Omit<Usuario, 'id'>
 
+export type UsuarioCambios = Partial<Omit<Usuario, 'id'>>
+
 /**
  * Lo que sale hacia el exterior: el mismo usuario,
  * nunca el hash de la clave.

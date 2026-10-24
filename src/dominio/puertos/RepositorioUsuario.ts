@@ -1,5 +1,6 @@
 import type {
   Usuario,
+  UsuarioCambios,
   UsuarioNuevo,
 } from '../modelo/Usuario'
 
@@ -15,4 +16,6 @@ export interface RepositorioUsuario {
   obtenerPorCorreo(correo: string): Promise<Usuario | null>
 
   obtenerPorId(id: number): Promise<Usuario | null>
+
+  actualizar(id: number, cambios: UsuarioCambios): Promise<Usuario | null>
 }
