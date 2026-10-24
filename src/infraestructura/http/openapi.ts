@@ -527,6 +527,41 @@ export const openapi = {
           ),
         },
       },
+      delete: {
+        tags: ['Productos'],
+        summary: 'Eliminar un producto',
+        description: [
+          'Borra definitivamente el producto con las reglas de `EliminarProducto`.',
+          '',
+          '**Requiere rol `ADMINISTRADOR`.**',
+          '',
+          '- Solo se elimina un producto que **no tenga tickets ni movimientos de inventario**: su',
+          '  historia debe conservarse. Si los tiene, responde 409.',
+          '- Para sacar del catálogo un producto con historia, usar `PUT /productos/{id}` con',
+          '  `{ "activo": false }`.',
+        ].join('\n'),
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            description: 'Id del producto.',
+            schema: { type: 'integer', minimum: 1, example: 1 },
+          },
+        ],
+        responses: {
+          204: { description: 'Producto eliminado. La respuesta no tiene cuerpo.' },
+          400: respuestaError('El id no es un entero positivo.', 'id inválido'),
+          401: sinSesion,
+          403: sinPermiso('ADMINISTRADOR'),
+          404: respuestaError('No existe un producto con ese id.', 'No existe el producto 42'),
+          409: respuestaError(
+            'El producto tiene tickets o movimientos de inventario que lo referencian.',
+            'El producto 1 tiene 2 ticket(s) y 0 movimiento(s) de inventario; desactívalo en vez de eliminarlo',
+          ),
+        },
+      },
     },
 
     '/tickets': {

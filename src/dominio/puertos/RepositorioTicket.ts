@@ -23,4 +23,10 @@ export interface RepositorioTicket {
     id: number,
     estado: EstadoTicket,
   ): Promise<Ticket>
+
+  /**
+   * Cuántos tickets referencian al producto, en cualquier
+   * estado.
+   */
+  contarPorProducto(productoId: number): Promise<number>
 }

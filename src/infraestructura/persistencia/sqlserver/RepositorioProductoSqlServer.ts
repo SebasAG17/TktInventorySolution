@@ -144,4 +144,20 @@ export class RepositorioProductoSqlServer
 
     return resultado.recordset[0] ?? null
   }
+
+  async eliminar(id: number): Promise<boolean> {
+    const conexion = await ConexionSqlServer.obtenerPool()
+
+    const resultado = await conexion
+      .request()
+      .input('id', id)
+      .query(`
+        DELETE FROM Producto
+        WHERE id = @id
+      `)
+
+    // rowsAffected[0] es cuántas filas borró el DELETE: 0
+    // significa que el producto no existía.
+    return resultado.rowsAffected[0] > 0
+  }
 }

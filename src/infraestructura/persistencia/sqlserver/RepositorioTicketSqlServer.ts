@@ -130,4 +130,19 @@ export class RepositorioTicketSqlServer
 
     return resultado.recordset[0] as Ticket
   }
+
+  async contarPorProducto(productoId: number): Promise<number> {
+    const conexion = await ConexionSqlServer.obtenerPool()
+
+    const resultado = await conexion
+      .request()
+      .input('productoId', productoId)
+      .query(`
+        SELECT COUNT(*) AS total
+        FROM Ticket
+        WHERE productoId = @productoId
+      `)
+
+    return resultado.recordset[0].total as number
+  }
 }

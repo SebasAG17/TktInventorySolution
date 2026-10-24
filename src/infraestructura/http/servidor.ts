@@ -66,7 +66,7 @@ export function crearServidor(
     autenticacionRoutes(deps.autenticacion, deps.tokens),
   )
 
-  api.use('/productos', productoRoutes(deps.productos))
+  api.use('/productos', productoRoutes(deps.productos, deps.tokens))
 
   api.use('/tickets', ticketRoutes(deps.tickets))
   api.use('/usuarios', usuarioRoutes(deps.usuarios, deps.tokens))
