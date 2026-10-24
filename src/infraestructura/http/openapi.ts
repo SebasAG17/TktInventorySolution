@@ -336,6 +336,65 @@ export const openapi = {
       },
     },
 
+    '/productos/{id}': {
+      put: {
+        tags: ['Productos'],
+        summary: 'Actualizar un producto',
+        description: [
+          'Actualiza parcialmente el producto indicado. Solo se modifican los campos enviados; el id no cambia.',
+          '',
+          '- `nombre`, si se envía, no puede quedar vacío y se guarda sin espacios al inicio ni al final.',
+          '- `descripcion` se guarda sin espacios al inicio ni al final.',
+          '- `precio` debe ser mayor o igual a cero.',
+          '- `stock` debe ser un entero mayor o igual a cero.',
+          '- Debe enviarse al menos un campo modificable.',
+        ].join('\n'),
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'integer', minimum: 1 },
+            example: 1,
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                minProperties: 1,
+                properties: {
+                  nombre: { type: 'string', minLength: 1, example: 'Teclado mecánico' },
+                  descripcion: { type: 'string', example: 'Retroiluminado, 87 teclas' },
+                  precio: { type: 'number', minimum: 0, example: 189900 },
+                  stock: { type: 'integer', minimum: 0, example: 25 },
+                  activo: { type: 'boolean', example: true },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Producto actualizado.',
+            content: {
+              'application/json': { schema: { $ref: '#/components/schemas/ProductoDTO' } },
+            },
+          },
+          400: respuestaError(
+            'No se enviaron campos o nombre, precio o stock no cumplen las reglas.',
+            'El nombre del producto es obligatorio',
+          ),
+          404: respuestaError(
+            'No existe un producto con el id indicado.',
+            'No existe el producto 1',
+          ),
+        },
+      },
+    },
+
     '/tickets': {
       get: {
         tags: ['Tickets'],

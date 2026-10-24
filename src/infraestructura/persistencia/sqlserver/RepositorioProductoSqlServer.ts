@@ -1,5 +1,6 @@
 import type {
   Producto,
+  ProductoCambios,
   ProductoNuevo,
 } from '../../../dominio/modelo/Producto'
 
@@ -94,6 +95,51 @@ export class RepositorioProductoSqlServer
         FROM Producto
         WHERE id = @id
       `)
+
+    return resultado.recordset[0] ?? null
+  }
+
+  async actualizar(
+    id: number,
+    cambios: ProductoCambios,
+  ): Promise<Producto | null> {
+    const conexion = await ConexionSqlServer.obtenerPool()
+
+    const peticion = conexion.request().input('id', id)
+
+    // Solo se tocan las columnas que vinieron en `cambios`.
+    // Los nombres salen de esta lista fija y los valores son parámetros.
+    const columnas: (keyof ProductoCambios)[] = [
+      'nombre',
+      'descripcion',
+      'precio',
+      'stock',
+      'activo',
+    ]
+
+    const asignaciones = columnas
+      .filter((columna) => cambios[columna] !== undefined)
+      .map((columna) => {
+        peticion.input(columna, cambios[columna])
+        return `${columna} = @${columna}`
+      })
+
+    if (asignaciones.length === 0) {
+      return this.obtenerPorId(id)
+    }
+
+    const resultado = await peticion.query(`
+      UPDATE Producto
+      SET ${asignaciones.join(', ')}
+      OUTPUT
+        INSERTED.id,
+        INSERTED.nombre,
+        INSERTED.descripcion,
+        INSERTED.precio,
+        INSERTED.stock,
+        INSERTED.activo
+      WHERE id = @id
+    `)
 
     return resultado.recordset[0] ?? null
   }

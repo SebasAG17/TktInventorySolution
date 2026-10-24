@@ -1,5 +1,6 @@
 import type {
   Producto,
+  ProductoCambios,
   ProductoNuevo,
 } from '../modelo/Producto'
 
@@ -16,4 +17,13 @@ export interface RepositorioProducto {
   obtenerTodos(): Promise<Producto[]>
 
   obtenerPorId(id: number): Promise<Producto | null>
+
+  /**
+   * Aplica cambios parciales a un producto existente y
+   * devuelve cómo quedó, o null si el producto no existe.
+   */
+  actualizar(
+    id: number,
+    cambios: ProductoCambios,
+  ): Promise<Producto | null>
 }
