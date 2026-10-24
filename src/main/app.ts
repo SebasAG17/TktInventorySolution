@@ -14,6 +14,8 @@ import { AprobarTicket } from '../aplicacion/casos-uso/tickets/AprobarTicket'
 import { CancelarTicket } from '../aplicacion/casos-uso/tickets/CancelarTicket'
 import { RegistrarUsuario } from '../aplicacion/casos-uso/usuarios/RegistrarUsuario'
 import { IniciarSesion } from '../aplicacion/casos-uso/usuarios/IniciarSesion'
+import { ActualizarUsuario } from '../aplicacion/casos-uso/usuarios/ActualizarUsuario'
+import { EliminarUsuario } from '../aplicacion/casos-uso/usuarios/EliminarUsuario'
 
 import { RepositorioProductoSqlServer } from '../infraestructura/persistencia/sqlserver/RepositorioProductoSqlServer'
 import { RepositorioTicketSqlServer } from '../infraestructura/persistencia/sqlserver/RepositorioTicketSqlServer'
@@ -27,6 +29,7 @@ import { AutenticacionController } from '../infraestructura/http/controladores/A
 import { ProductoController } from '../infraestructura/http/controladores/ProductoController'
 import { TicketController } from '../infraestructura/http/controladores/TicketController'
 import { InventarioController } from '../infraestructura/http/controladores/InventarioController'
+import { UsuarioController } from '../infraestructura/http/controladores/UsuarioController'
 
 import { crearServidor } from '../infraestructura/http/servidor'
 
@@ -64,11 +67,17 @@ const inventarioController = new InventarioController(
   new ConsultarInventario(movimientos, productos),
 )
 
+const usuarioController = new UsuarioController(
+  new ActualizarUsuario(usuarios, claves),
+  new EliminarUsuario(usuarios),
+)
+
 const app = crearServidor({
   autenticacion: autenticacionController,
   productos: productoController,
   tickets: ticketController,
   inventario: inventarioController,
+  usuarios: usuarioController,
   tokens,
 })
 

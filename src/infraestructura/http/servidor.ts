@@ -13,11 +13,13 @@ import { AutenticacionController } from './controladores/AutenticacionController
 import { ProductoController } from './controladores/ProductoController'
 import { TicketController } from './controladores/TicketController'
 import { InventarioController } from './controladores/InventarioController'
+import { UsuarioController } from './controladores/UsuarioController'
 
 import { autenticacionRoutes } from './rutas/autenticacionRoutes'
 import { productoRoutes } from './rutas/productoRoutes'
 import { ticketRoutes } from './rutas/ticketRoutes'
 import { inventarioRoutes } from './rutas/inventarioRoutes'
+import { usuarioRoutes } from './rutas/usuarioRoutes'
 
 import {
   manejadorErrores,
@@ -34,6 +36,7 @@ export interface DependenciasServidor {
   productos: ProductoController
   tickets: TicketController
   inventario: InventarioController
+  usuarios: UsuarioController
   tokens: ServicioTokens
 }
 
@@ -66,6 +69,7 @@ export function crearServidor(
   api.use('/productos', productoRoutes(deps.productos))
 
   api.use('/tickets', ticketRoutes(deps.tickets))
+  api.use('/usuarios', usuarioRoutes(deps.usuarios, deps.tokens))
 
   api.use('/inventario', inventarioRoutes(deps.inventario))
 

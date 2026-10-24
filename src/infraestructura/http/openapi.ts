@@ -99,6 +99,7 @@ const saldoProducto = {
   },
   required: ['productoId', 'nombre', 'saldo'],
 }
+const idUsuario = { name: 'id', in: 'path', required: true, description: 'Id del usuario.', schema: { type: 'integer', minimum: 1, example: 2 } }
 
 const error = {
   type: 'object',
@@ -170,6 +171,7 @@ export const openapi = {
       name: 'Autenticación',
       description: 'Registro de usuarios, inicio de sesión y consulta del perfil propio.',
     },
+    { name: 'Usuarios', description: 'Administración de los usuarios registrados.' },
     { name: 'Productos', description: 'Catálogo de productos del inventario.' },
     {
       name: 'Tickets',
@@ -358,6 +360,42 @@ export const openapi = {
             'El token es válido pero el usuario ya no existe.',
             'Usuario no encontrado',
           ),
+        },
+      },
+    },
+
+    '/usuarios/{id}': {
+      put: {
+        tags: ['Usuarios'], summary: 'Actualizar un usuario',
+        description: 'Actualización parcial: cada usuario puede cambiar sus datos básicos; solo ADMINISTRADOR puede modificar a otros o cambiar rol y activo. El rol se relee de la base de datos.',
+        security: [{ bearerAuth: [] }], parameters: [idUsuario],
+        requestBody: { required: true, content: { 'application/json': { schema: {
+          type: 'object', minProperties: 1, properties: {
+            nombre: { type: 'string', minLength: 2 }, correo: { type: 'string', format: 'email' },
+            clave: { type: 'string', minLength: 8, format: 'password' }, rol: { type: 'string', enum: ROLES }, activo: { type: 'boolean' },
+          },
+        } } } },
+        responses: {
+          200: { description: 'Usuario actualizado (sin el hash de la clave).', content: { 'application/json': { schema: { $ref: '#/components/schemas/UsuarioDTO' } } } },
+          400: respuestaError('id o datos inválidos, o cuerpo sin campos.', 'id inválido'),
+          401: respuestaError('Token ausente, mal formado, expirado o con firma inválida.', 'Sesión requerida'),
+          403: respuestaError('El solicitante no tiene permiso para este cambio.', 'Acceso denegado'),
+          404: respuestaError('No existe el usuario solicitado.', 'No existe el usuario 42'),
+          409: respuestaError('El correo ya pertenece a otro usuario.', 'El correo ya está registrado'),
+        },
+      },
+      delete: {
+        tags: ['Usuarios'],
+        summary: 'Eliminar un usuario',
+        description: 'Elimina definitivamente usuarios. Solo ADMINISTRADOR puede hacerlo. El rol se consulta en la base de datos y el administrador no puede eliminarse a si mismo. Para desactivar temporalmente use PUT con activo=false.',
+        security: [{ bearerAuth: [] }],
+        parameters: [idUsuario],
+        responses: {
+          204: { description: 'Usuario eliminado. Sin cuerpo.' },
+          400: respuestaError('El id no es un entero positivo.', 'id invalido'),
+          401: respuestaError('Token ausente, mal formado, expirado o con firma invalida.', 'Sesion requerida'),
+          403: respuestaError('No es administrador o intenta eliminarse a si mismo.', 'Solo un administrador puede eliminar usuarios'),
+          404: respuestaError('No existe un usuario con ese id.', 'No existe el usuario 42'),
         },
       },
     },
