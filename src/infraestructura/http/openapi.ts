@@ -571,8 +571,16 @@ export const openapi = {
             },
           },
           400: respuestaError(
-            'Título vacío, cantidad no positiva, estado desconocido, producto inexistente o stock insuficiente.',
-            'No hay suficiente stock del producto',
+            'Título vacío, cantidad no positiva o estado desconocido.',
+            'La cantidad debe ser mayor que cero',
+          ),
+          404: respuestaError(
+            'El producto referenciado no existe.',
+            'No existe el producto 42',
+          ),
+          409: respuestaError(
+            'El producto no tiene stock suficiente para la cantidad pedida.',
+            'Se solicitaron 10 unidades y solo hay 3',
           ),
         },
       },
