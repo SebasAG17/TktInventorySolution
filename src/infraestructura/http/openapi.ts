@@ -88,6 +88,18 @@ const ticket = {
   ],
 }
 
+const saldoProducto = {
+  type: 'object',
+  description:
+    'Saldo de inventario de un producto (`SaldoProducto`): la suma de sus entradas menos sus salidas.',
+  properties: {
+    productoId: { type: 'integer', example: 1 },
+    nombre: { type: 'string', example: 'Teclado mecánico' },
+    saldo: { type: 'integer', example: 25 },
+  },
+  required: ['productoId', 'nombre', 'saldo'],
+}
+
 const error = {
   type: 'object',
   properties: { error: { type: 'string', example: 'Correo o clave incorrectos' } },
@@ -137,8 +149,9 @@ export const openapi = {
     description: [
       'API del sistema de inventario y tickets.',
       '',
-      'Cubre la **autenticación y el registro de usuarios**, el **catálogo de productos** y la',
-      'gestión de **tickets** de salida de inventario (creación, consulta, aprobación y cancelación).',
+      'Cubre la **autenticación y el registro de usuarios**, el **catálogo de productos**, la',
+      'gestión de **tickets** de salida de inventario (creación, consulta, aprobación y cancelación)',
+      'y la consulta del **saldo de inventario**.',
       '',
       '**Cómo probar desde aquí**: registra un usuario en `POST /api/auth/registro`, inicia sesión en',
       '`POST /api/auth/login`, copia el `token` de la respuesta y pégalo en el botón **Authorize** de',
@@ -174,6 +187,10 @@ export const openapi = {
         '',
         'La aprobación y cancelación comprueban estas reglas y rechazan tanto tickets inexistentes como transiciones inválidas.',
       ].join('\n'),
+    },
+    {
+      name: 'Inventario',
+      description: 'Saldo de inventario calculado a partir de los movimientos de entrada y salida.',
     },
   ],
   paths: {
@@ -399,6 +416,65 @@ export const openapi = {
       },
     },
 
+    '/productos/{id}': {
+      put: {
+        tags: ['Productos'],
+        summary: 'Actualizar un producto',
+        description: [
+          'Actualiza parcialmente el producto indicado. Solo se modifican los campos enviados; el id no cambia.',
+          '',
+          '- `nombre`, si se envía, no puede quedar vacío y se guarda sin espacios al inicio ni al final.',
+          '- `descripcion` se guarda sin espacios al inicio ni al final.',
+          '- `precio` debe ser mayor o igual a cero.',
+          '- `stock` debe ser un entero mayor o igual a cero.',
+          '- Debe enviarse al menos un campo modificable.',
+        ].join('\n'),
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'integer', minimum: 1 },
+            example: 1,
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                minProperties: 1,
+                properties: {
+                  nombre: { type: 'string', minLength: 1, example: 'Teclado mecánico' },
+                  descripcion: { type: 'string', example: 'Retroiluminado, 87 teclas' },
+                  precio: { type: 'number', minimum: 0, example: 189900 },
+                  stock: { type: 'integer', minimum: 0, example: 25 },
+                  activo: { type: 'boolean', example: true },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Producto actualizado.',
+            content: {
+              'application/json': { schema: { $ref: '#/components/schemas/ProductoDTO' } },
+            },
+          },
+          400: respuestaError(
+            'id inválido, cuerpo sin campos o nombre, precio o stock no cumplen las reglas.',
+            'El precio no puede ser negativo',
+          ),
+          404: respuestaError(
+            'No existe un producto con el id indicado.',
+            'No existe el producto 42',
+          ),
+        },
+      },
+    },
+
     '/tickets': {
       get: {
         tags: ['Tickets'],
@@ -523,6 +599,63 @@ export const openapi = {
         },
       },
     },
+
+    '/inventario': {
+      get: {
+        tags: ['Inventario'],
+        summary: 'Consultar el saldo de todos los productos',
+        description:
+          'El saldo de cada producto es la suma de sus ENTRADAS menos sus SALIDAS. Los productos ' +
+          'sin movimientos aparecen con saldo 0.',
+        responses: {
+          200: {
+            description: 'Saldo por producto, en el orden del catálogo.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/SaldoProductoDTO' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+
+    '/inventario/{productoId}': {
+      get: {
+        tags: ['Inventario'],
+        summary: 'Consultar el saldo de un producto',
+        parameters: [
+          {
+            name: 'productoId',
+            in: 'path',
+            required: true,
+            description: 'Id del producto.',
+            schema: { type: 'integer', minimum: 1, example: 1 },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Saldo del producto.',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/SaldoProductoDTO' },
+              },
+            },
+          },
+          400: respuestaError(
+            'El productoId no es un entero positivo.',
+            'productoId inválido',
+          ),
+          404: respuestaError(
+            'No existe un producto con ese id.',
+            'No existe el producto 42',
+          ),
+        },
+      },
+    },
   },
   components: {
     schemas: {
@@ -531,6 +664,7 @@ export const openapi = {
       ProductoDTO: producto,
       TicketDTO: ticket,
       ErrorDTO: error,
+      SaldoProductoDTO: saldoProducto,
     },
     securitySchemes: {
       bearerAuth: {
