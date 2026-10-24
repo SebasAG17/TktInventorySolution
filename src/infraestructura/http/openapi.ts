@@ -66,6 +66,18 @@ const ticket = {
   ],
 }
 
+const saldoProducto = {
+  type: 'object',
+  description:
+    'Saldo de inventario de un producto (`SaldoProducto`): la suma de sus entradas menos sus salidas.',
+  properties: {
+    productoId: { type: 'integer', example: 1 },
+    nombre: { type: 'string', example: 'Teclado mecánico' },
+    saldo: { type: 'integer', example: 25 },
+  },
+  required: ['productoId', 'nombre', 'saldo'],
+}
+
 const error = {
   type: 'object',
   properties: { error: { type: 'string', example: 'Correo o clave incorrectos' } },
@@ -465,6 +477,7 @@ export const openapi = {
       ProductoDTO: producto,
       TicketDTO: ticket,
       ErrorDTO: error,
+      SaldoProductoDTO: saldoProducto,
     },
     securitySchemes: {
       bearerAuth: {
