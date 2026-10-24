@@ -7,5 +7,6 @@ export function usuarioRoutes(controller: UsuarioController, tokens: ServicioTok
   const router = Router()
   router.use(exigirSesion(tokens))
   router.put('/:id', controller.actualizar)
+  router.delete('/:id', controller.eliminar)
   return router
 }

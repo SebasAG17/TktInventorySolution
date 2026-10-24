@@ -10,6 +10,7 @@ import { ConsultarTickets } from '../aplicacion/casos-uso/tickets/ConsultarTicke
 import { RegistrarUsuario } from '../aplicacion/casos-uso/usuarios/RegistrarUsuario'
 import { IniciarSesion } from '../aplicacion/casos-uso/usuarios/IniciarSesion'
 import { ActualizarUsuario } from '../aplicacion/casos-uso/usuarios/ActualizarUsuario'
+import { EliminarUsuario } from '../aplicacion/casos-uso/usuarios/EliminarUsuario'
 
 import { RepositorioProductoSqlServer } from '../infraestructura/persistencia/sqlserver/RepositorioProductoSqlServer'
 import { RepositorioTicketSqlServer } from '../infraestructura/persistencia/sqlserver/RepositorioTicketSqlServer'
@@ -52,6 +53,7 @@ const ticketController = new TicketController(
 
 const usuarioController = new UsuarioController(
   new ActualizarUsuario(usuarios, claves),
+  new EliminarUsuario(usuarios),
 )
 
 const app = crearServidor({

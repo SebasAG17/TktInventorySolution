@@ -18,4 +18,6 @@ export interface RepositorioUsuario {
   obtenerPorId(id: number): Promise<Usuario | null>
 
   actualizar(id: number, cambios: UsuarioCambios): Promise<Usuario | null>
+
+  eliminar(id: number): Promise<boolean>
 }

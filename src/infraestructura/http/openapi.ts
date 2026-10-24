@@ -305,6 +305,20 @@ export const openapi = {
           409: respuestaError('El correo ya pertenece a otro usuario.', 'El correo ya está registrado'),
         },
       },
+      delete: {
+        tags: ['Usuarios'],
+        summary: 'Eliminar un usuario',
+        description: 'Elimina definitivamente usuarios. Solo ADMINISTRADOR puede hacerlo. El rol se consulta en la base de datos y el administrador no puede eliminarse a si mismo. Para desactivar temporalmente use PUT con activo=false.',
+        security: [{ bearerAuth: [] }],
+        parameters: [idUsuario],
+        responses: {
+          204: { description: 'Usuario eliminado. Sin cuerpo.' },
+          400: respuestaError('El id no es un entero positivo.', 'id invalido'),
+          401: respuestaError('Token ausente, mal formado, expirado o con firma invalida.', 'Sesion requerida'),
+          403: respuestaError('No es administrador o intenta eliminarse a si mismo.', 'Solo un administrador puede eliminar usuarios'),
+          404: respuestaError('No existe un usuario con ese id.', 'No existe el usuario 42'),
+        },
+      },
     },
 
     '/productos': {
