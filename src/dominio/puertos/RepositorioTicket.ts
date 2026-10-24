@@ -1,5 +1,6 @@
 import type {
   Ticket,
+  TicketCambios,
   TicketNuevo,
 } from '../modelo/Ticket'
 
@@ -29,4 +30,13 @@ export interface RepositorioTicket {
    * estado.
    */
   contarPorProducto(productoId: number): Promise<number>
+
+  /**
+   * Aplica cambios parciales a un ticket y devuelve cómo
+   * quedó, o null si el ticket no existe.
+   */
+  actualizar(
+    id: number,
+    cambios: TicketCambios,
+  ): Promise<Ticket | null>
 }

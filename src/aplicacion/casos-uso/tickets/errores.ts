@@ -28,3 +28,15 @@ export class TransicionInvalida extends Error {
     )
   }
 }
+
+/** El ticket ya salió de PENDIENTE y no se puede editar. */
+export class TicketNoEditable extends Error {
+  constructor(readonly estado: EstadoTicket) {
+    super(
+      `Un ticket en estado ${estado} ya no se puede editar; solo los PENDIENTE`,
+    )
+  }
+}
+
+/** Los datos enviados no cumplen las reglas del ticket. */
+export class DatosTicketInvalidos extends Error {}

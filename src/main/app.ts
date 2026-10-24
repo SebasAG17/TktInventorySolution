@@ -13,6 +13,7 @@ import { ConsultarTickets } from '../aplicacion/casos-uso/tickets/ConsultarTicke
 import { ConsultarTicketPorId } from '../aplicacion/casos-uso/tickets/ConsultarTicketPorId'
 import { AprobarTicket } from '../aplicacion/casos-uso/tickets/AprobarTicket'
 import { CancelarTicket } from '../aplicacion/casos-uso/tickets/CancelarTicket'
+import { EditarTicket } from '../aplicacion/casos-uso/tickets/EditarTicket'
 import { RegistrarUsuario } from '../aplicacion/casos-uso/usuarios/RegistrarUsuario'
 import { IniciarSesion } from '../aplicacion/casos-uso/usuarios/IniciarSesion'
 import { ActualizarUsuario } from '../aplicacion/casos-uso/usuarios/ActualizarUsuario'
@@ -63,6 +64,7 @@ const ticketController = new TicketController(
   new ConsultarTicketPorId(tickets),
   new AprobarTicket(tickets),
   new CancelarTicket(tickets),
+  new EditarTicket(tickets, productos),
 )
 
 const inventarioController = new InventarioController(

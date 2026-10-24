@@ -16,6 +16,8 @@ export function ticketRoutes(
 
   router.get('/:id', controller.consultarPorId)
 
+  router.put('/:id', controller.editar)
+
   router.patch('/:id/aprobar', controller.aprobar)
 
   router.patch('/:id/cancelar', controller.cancelar)

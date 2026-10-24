@@ -26,7 +26,7 @@ export class AprobarTicket {
     const ticket = await this.tickets.obtenerPorId(id)
 
     if (!ticket) {
-      throw new TicketNoEncontrado(id)
+      throw new TicketNoEncontrado(id)  
     }
 
     if (!puedeTransitar(ticket.estado, 'APROBADO')) {

@@ -9,6 +9,7 @@ import {
 } from '../../../dominio/modelo/EstadoTicket'
 
 import type { Ticket } from '../../../dominio/modelo/Ticket'
+import type { TicketCambios } from '../../../dominio/modelo/Ticket'
 
 import {
   CrearTicket,
@@ -19,11 +20,43 @@ import { ConsultarTickets } from '../../../aplicacion/casos-uso/tickets/Consulta
 import { ConsultarTicketPorId } from '../../../aplicacion/casos-uso/tickets/ConsultarTicketPorId'
 import { AprobarTicket } from '../../../aplicacion/casos-uso/tickets/AprobarTicket'
 import { CancelarTicket } from '../../../aplicacion/casos-uso/tickets/CancelarTicket'
+import { EditarTicket } from '../../../aplicacion/casos-uso/tickets/EditarTicket'
 
 import {
+  DatosTicketInvalidos,
+  TicketNoEditable,
   TicketNoEncontrado,
   TransicionInvalida,
 } from '../../../aplicacion/casos-uso/tickets/errores'
+
+/** Convierte y valida los campos editables recibidos por HTTP. */
+function leerCambios(cuerpo: Record<string, unknown>): TicketCambios {
+  const cambios: TicketCambios = {}
+
+  if (cuerpo.titulo !== undefined) {
+    if (typeof cuerpo.titulo !== 'string') {
+      throw new DatosTicketInvalidos('título inválido')
+    }
+    cambios.titulo = cuerpo.titulo
+  }
+
+  if (cuerpo.descripcion !== undefined) {
+    if (typeof cuerpo.descripcion !== 'string') {
+      throw new DatosTicketInvalidos('descripción inválida')
+    }
+    cambios.descripcion = cuerpo.descripcion
+  }
+
+  if (cuerpo.productoId !== undefined) {
+    cambios.productoId = Number(cuerpo.productoId)
+  }
+
+  if (cuerpo.cantidad !== undefined) {
+    cambios.cantidad = Number(cuerpo.cantidad)
+  }
+
+  return cambios
+}
 
 export class TicketController {
   constructor(
@@ -32,6 +65,7 @@ export class TicketController {
     private readonly consultarTicketPorId: ConsultarTicketPorId,
     private readonly aprobarTicket: AprobarTicket,
     private readonly cancelarTicket: CancelarTicket,
+    private readonly editarTicket: EditarTicket,
   ) {}
 
   crear = async (
@@ -120,6 +154,54 @@ export class TicketController {
     await this.responderConTicket(req, res, next, (id) =>
       this.cancelarTicket.ejecutar(id),
     )
+  }
+
+  editar = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    const cuerpo = req.body
+
+    if (!cuerpo || typeof cuerpo !== 'object' || Array.isArray(cuerpo)) {
+      res.status(400).json({ error: 'El cuerpo debe ser un objeto JSON' })
+      return
+    }
+
+    if (cuerpo.estado !== undefined) {
+      res.status(400).json({
+        error: 'El estado no se edita aquí: usa /aprobar o /cancelar',
+      })
+      return
+    }
+
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id <= 0) {
+      res.status(400).json({ error: 'id inválido' })
+      return
+    }
+
+    try {
+      const ticket = await this.editarTicket.ejecutar(
+        id,
+        leerCambios(cuerpo as Record<string, unknown>),
+      )
+      res.json(ticket)
+    } catch (error) {
+      if (error instanceof DatosTicketInvalidos) {
+        res.status(400).json({ error: error.message })
+        return
+      }
+      if (error instanceof TicketNoEncontrado || error instanceof ProductoInexistente) {
+        res.status(404).json({ error: error.message })
+        return
+      }
+      if (error instanceof TicketNoEditable || error instanceof StockInsuficiente) {
+        res.status(409).json({ error: error.message })
+        return
+      }
+      next(error)
+    }
   }
 
   /**
