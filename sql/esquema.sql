@@ -52,3 +52,24 @@ BEGIN
   );
 END
 GO
+
+IF OBJECT_ID('dbo.MovimientoInventario', 'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.MovimientoInventario (
+    id         INT IDENTITY(1,1) PRIMARY KEY,
+    productoId INT            NOT NULL,
+    tipo       NVARCHAR(10)   NOT NULL,
+    cantidad   INT            NOT NULL CONSTRAINT CK_Movimiento_cantidad CHECK (cantidad > 0),
+    motivo     NVARCHAR(500)  NOT NULL CONSTRAINT DF_Movimiento_motivo DEFAULT '',
+    fecha      DATETIME2      NOT NULL CONSTRAINT DF_Movimiento_fecha  DEFAULT SYSUTCDATETIME(),
+
+    CONSTRAINT FK_Movimiento_Producto FOREIGN KEY (productoId) REFERENCES dbo.Producto (id),
+    -- Debe coincidir con TIPOS_MOVIMIENTO en src/dominio/modelo/MovimientoInventario.ts
+    CONSTRAINT CK_Movimiento_tipo CHECK (tipo IN ('ENTRADA', 'SALIDA'))
+  );
+
+  -- Las consultas de saldo filtran siempre por producto.
+  CREATE INDEX IX_Movimiento_producto
+    ON dbo.MovimientoInventario (productoId, fecha DESC);
+END
+GO
