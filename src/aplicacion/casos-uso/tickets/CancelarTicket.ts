@@ -10,7 +10,7 @@ import {
   TicketNoEncontrado,
   TransicionInvalida,
 } from './errores'
-
+  
 /**
  * Caso de uso para cancelar un ticket.
  *
