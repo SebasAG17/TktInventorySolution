@@ -14,5 +14,11 @@ export function ticketRoutes(
 
   router.get('/', controller.consultarTodos)
 
+  router.get('/:id', controller.consultarPorId)
+
+  router.patch('/:id/aprobar', controller.aprobar)
+
+  router.patch('/:id/cancelar', controller.cancelar)
+
   return router
 }

@@ -45,12 +45,34 @@ const producto = {
 
 const ticket = {
   type: 'object',
-  description: 'Solicitud de salida de inventario sobre un producto.',
+  description: [
+    'Solicitud de salida de inventario sobre un producto.',
+    '',
+    'Ciclo de vida del ticket:',
+    '',
+    '- `PENDIENTE` puede aprobarse o cancelarse.',
+    '- `APROBADO` puede entregarse o cancelarse.',
+    '- `CANCELADO` y `ENTREGADO` son estados finales.',
+    '',
+    'Los casos de uso `AprobarTicket` y `CancelarTicket` validan estas transiciones antes de guardar el nuevo estado.',
+  ].join('\n'),
   properties: {
     id: { type: 'integer', example: 1 },
     titulo: { type: 'string', example: 'Teclado para sala de juntas' },
     descripcion: { type: 'string', example: 'Reemplazo del equipo dañado' },
-    estado: { type: 'string', enum: ESTADOS_TICKET, example: 'PENDIENTE' },
+    estado: {
+      type: 'string',
+      enum: ESTADOS_TICKET,
+      example: 'PENDIENTE',
+      description: [
+        'Estado actual del ticket.',
+        '',
+        'Transiciones permitidas:',
+        '- `PENDIENTE` → `APROBADO` o `CANCELADO`.',
+        '- `APROBADO` → `ENTREGADO` o `CANCELADO`.',
+        '- `CANCELADO` y `ENTREGADO` no admiten más transiciones.',
+      ].join('\n'),
+    },
     productoId: { type: 'integer', example: 1 },
     cantidad: { type: 'integer', minimum: 1, example: 2 },
     fechaCreacion: { type: 'string', format: 'date-time' },
@@ -82,6 +104,31 @@ const respuestaError = (description: string, ejemplo: string) => ({
   },
 })
 
+const idTicket = {
+  name: 'id',
+  in: 'path',
+  required: true,
+  description: 'Id del ticket.',
+  schema: { type: 'integer', minimum: 1, example: 1 },
+}
+
+const respuestaTicket = (description: string) => ({
+  description,
+  content: {
+    'application/json': { schema: { $ref: '#/components/schemas/TicketDTO' } },
+  },
+})
+
+const idInvalido = respuestaError(
+  'El id no es un entero positivo.',
+  'id inválido',
+)
+
+const ticketNoEncontrado = respuestaError(
+  'No existe un ticket con ese id.',
+  'No existe el ticket 42',
+)
+
 export const openapi = {
   openapi: '3.0.3',
   info: {
@@ -91,7 +138,7 @@ export const openapi = {
       'API del sistema de inventario y tickets.',
       '',
       'Cubre la **autenticación y el registro de usuarios**, el **catálogo de productos** y la',
-      'creación de **tickets** de salida de inventario.',
+      'gestión de **tickets** de salida de inventario (creación, consulta, aprobación y cancelación).',
       '',
       '**Cómo probar desde aquí**: registra un usuario en `POST /api/auth/registro`, inicia sesión en',
       '`POST /api/auth/login`, copia el `token` de la respuesta y pégalo en el botón **Authorize** de',
@@ -111,7 +158,23 @@ export const openapi = {
       description: 'Registro de usuarios, inicio de sesión y consulta del perfil propio.',
     },
     { name: 'Productos', description: 'Catálogo de productos del inventario.' },
-    { name: 'Tickets', description: 'Solicitudes de salida de inventario.' },
+    {
+      name: 'Tickets',
+      description: [
+        'Solicitudes de salida de inventario.',
+        '',
+        'Estados y transiciones de negocio:',
+        '',
+        '| Estado actual | Transiciones permitidas |',
+        '| --- | --- |',
+        '| `PENDIENTE` | `APROBADO`, `CANCELADO` |',
+        '| `APROBADO` | `ENTREGADO`, `CANCELADO` |',
+        '| `CANCELADO` | Ninguna |',
+        '| `ENTREGADO` | Ninguna |',
+        '',
+        'La aprobación y cancelación comprueban estas reglas y rechazan tanto tickets inexistentes como transiciones inválidas.',
+      ].join('\n'),
+    },
   ],
   paths: {
     '/salud': {
@@ -340,6 +403,8 @@ export const openapi = {
       get: {
         tags: ['Tickets'],
         summary: 'Consultar todos los tickets',
+        description:
+          'Devuelve el estado actual de cada solicitud. Consulta la descripción de `TicketDTO` para conocer el ciclo de vida y las transiciones permitidas.',
         responses: {
           200: {
             description: 'Tickets registrados, ordenados por id.',
@@ -394,6 +459,66 @@ export const openapi = {
           400: respuestaError(
             'Título vacío, cantidad no positiva, estado desconocido, producto inexistente o stock insuficiente.',
             'No hay suficiente stock del producto',
+          ),
+        },
+      },
+    },
+
+    '/tickets/{id}': {
+      get: {
+        tags: ['Tickets'],
+        summary: 'Consultar un ticket por id',
+        parameters: [idTicket],
+        responses: {
+          200: respuestaTicket('Ticket encontrado.'),
+          400: idInvalido,
+          404: ticketNoEncontrado,
+        },
+      },
+    },
+
+    '/tickets/{id}/aprobar': {
+      patch: {
+        tags: ['Tickets'],
+        summary: 'Aprobar un ticket',
+        description: [
+          'Pasa el ticket a `APROBADO`. Aplica las reglas de `AprobarTicket`:',
+          '',
+          '- Solo un ticket en estado `PENDIENTE` puede aprobarse.',
+          '- Desde cualquier otro estado la transición se rechaza con 409.',
+        ].join('\n'),
+        parameters: [idTicket],
+        responses: {
+          200: respuestaTicket('Ticket aprobado.'),
+          400: idInvalido,
+          404: ticketNoEncontrado,
+          409: respuestaError(
+            'El estado actual del ticket no permite pasar a APROBADO.',
+            'Un ticket en estado CANCELADO no puede pasar a APROBADO',
+          ),
+        },
+      },
+    },
+
+    '/tickets/{id}/cancelar': {
+      patch: {
+        tags: ['Tickets'],
+        summary: 'Cancelar un ticket',
+        description: [
+          'Pasa el ticket a `CANCELADO`. Aplica las reglas de `CancelarTicket`:',
+          '',
+          '- Se puede cancelar mientras esté `PENDIENTE` o `APROBADO`.',
+          '- Un ticket `ENTREGADO` ya no se cancela, porque el producto salió del inventario.',
+          '- `CANCELADO` es un estado final.',
+        ].join('\n'),
+        parameters: [idTicket],
+        responses: {
+          200: respuestaTicket('Ticket cancelado.'),
+          400: idInvalido,
+          404: ticketNoEncontrado,
+          409: respuestaError(
+            'El estado actual del ticket no permite pasar a CANCELADO.',
+            'Un ticket en estado ENTREGADO no puede pasar a CANCELADO',
           ),
         },
       },
