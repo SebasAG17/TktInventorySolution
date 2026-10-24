@@ -384,12 +384,12 @@ export const openapi = {
             },
           },
           400: respuestaError(
-            'No se enviaron campos o nombre, precio o stock no cumplen las reglas.',
-            'El nombre del producto es obligatorio',
+            'id inválido, cuerpo sin campos o nombre, precio o stock no cumplen las reglas.',
+            'El precio no puede ser negativo',
           ),
           404: respuestaError(
             'No existe un producto con el id indicado.',
-            'No existe el producto 1',
+            'No existe el producto 42',
           ),
         },
       },
