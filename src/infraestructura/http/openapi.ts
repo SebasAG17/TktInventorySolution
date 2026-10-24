@@ -142,6 +142,18 @@ const ticketNoEncontrado = respuestaError(
   'No existe el ticket 42',
 )
 
+// Respuestas de las rutas protegidas por `exigirSesion` y `exigirRol`.
+const sinSesion = respuestaError(
+  'Token ausente, mal formado, expirado o con firma inválida.',
+  'Sesión requerida',
+)
+
+const sinPermiso = (roles: string) =>
+  respuestaError(
+    `El token es válido pero el rol no está permitido. Requiere: ${roles}.`,
+    `Esta acción requiere el rol ${roles}`,
+  )
+
 export const openapi = {
   openapi: '3.0.3',
   info: {
@@ -157,6 +169,10 @@ export const openapi = {
       '**Cómo probar desde aquí**: registra un usuario en `POST /api/auth/registro`, inicia sesión en',
       '`POST /api/auth/login`, copia el `token` de la respuesta y pégalo en el botón **Authorize** de',
       'arriba. A partir de ahí las rutas protegidas responden.',
+      '',
+      '**Roles**: algunas rutas, además del token, exigen un rol concreto (`SOLICITANTE`,',
+      '`ALMACENISTA` o `ADMINISTRADOR`); cada una lo indica en su descripción. Sin token responden',
+      '**401**; con un token cuyo rol no está permitido responden **403**.',
       '',
       'Todas las rutas cuelgan del prefijo `/api`.',
     ].join('\n'),
@@ -717,7 +733,9 @@ export const openapi = {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        description: 'Token obtenido en `POST /api/auth/login`.',
+        description:
+          'Token obtenido en `POST /api/auth/login`. Lleva el rol del usuario, que usan las rutas ' +
+          'restringidas por rol.',
       },
     },
   },
