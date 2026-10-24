@@ -26,4 +26,9 @@ export interface RepositorioProducto {
     id: number,
     cambios: ProductoCambios,
   ): Promise<Producto | null>
+
+  /**
+   * Borra un producto. Devuelve false si no existía.
+   */
+  eliminar(id: number): Promise<boolean>
 }

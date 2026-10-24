@@ -1,4 +1,8 @@
-import type { Request, Response } from 'express'
+import type {
+  NextFunction,
+  Request,
+  Response,
+} from 'express'
 
 import type {
   ProductoCambios,
@@ -10,6 +14,10 @@ import {
   ActualizarProducto,
   ProductoNoEncontrado,
 } from '../../../aplicacion/casos-uso/productos/ActualizarProducto'
+import {
+  EliminarProducto,
+  ProductoEnUso,
+} from '../../../aplicacion/casos-uso/productos/EliminarProducto'
 
 /**
  * Validación de frontera: del cuerpo solo se toman los
@@ -40,6 +48,7 @@ export class ProductoController {
     private readonly crearProducto: CrearProducto,
     private readonly consultarProductos: ConsultarProductos,
     private readonly actualizarProducto: ActualizarProducto,
+    private readonly eliminarProducto: EliminarProducto,
   ) {}
 
   crear = async (req: Request, res: Response): Promise<void> => {
@@ -93,6 +102,37 @@ export class ProductoController {
             ? error.message
             : 'Error al actualizar producto',
       })
+    }
+  }
+
+  eliminar = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    const id = Number(req.params.id)
+
+    if (!Number.isInteger(id) || id < 1) {
+      res.status(400).json({ error: 'id inválido' })
+      return
+    }
+
+    try {
+      await this.eliminarProducto.ejecutar(id)
+
+      res.status(204).end()
+    } catch (error) {
+      if (error instanceof ProductoNoEncontrado) {
+        res.status(404).json({ error: error.message })
+        return
+      }
+
+      if (error instanceof ProductoEnUso) {
+        res.status(409).json({ error: error.message })
+        return
+      }
+
+      next(error)
     }
   }
 

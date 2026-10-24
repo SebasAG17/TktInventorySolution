@@ -6,6 +6,7 @@ import { entorno } from '../infraestructura/configuracion/entorno'
 import { CrearProducto } from '../aplicacion/casos-uso/productos/CrearProducto'
 import { ConsultarProductos } from '../aplicacion/casos-uso/productos/ConsultarProductos'
 import { ActualizarProducto } from '../aplicacion/casos-uso/productos/ActualizarProducto'
+import { EliminarProducto } from '../aplicacion/casos-uso/productos/EliminarProducto'
 import { ConsultarInventario } from '../aplicacion/casos-uso/inventario/ConsultarInventario'
 import { CrearTicket } from '../aplicacion/casos-uso/tickets/CrearTicket'
 import { ConsultarTickets } from '../aplicacion/casos-uso/tickets/ConsultarTickets'
@@ -53,6 +54,7 @@ const productoController = new ProductoController(
   new CrearProducto(productos),
   new ConsultarProductos(productos),
   new ActualizarProducto(productos),
+  new EliminarProducto(productos, tickets, movimientos),
 )
 
 const ticketController = new TicketController(
