@@ -103,7 +103,7 @@ export const openapi = {
       'API del sistema de inventario y tickets.',
       '',
       'Cubre la **autenticación y el registro de usuarios**, el **catálogo de productos** y la',
-      'creación de **tickets** de salida de inventario.',
+      'creación de **tickets** de salida de inventario y la consulta del **saldo de inventario**.',
       '',
       '**Cómo probar desde aquí**: registra un usuario en `POST /api/auth/registro`, inicia sesión en',
       '`POST /api/auth/login`, copia el `token` de la respuesta y pégalo en el botón **Authorize** de',
@@ -124,6 +124,10 @@ export const openapi = {
     },
     { name: 'Productos', description: 'Catálogo de productos del inventario.' },
     { name: 'Tickets', description: 'Solicitudes de salida de inventario.' },
+    {
+      name: 'Inventario',
+      description: 'Saldo de inventario calculado a partir de los movimientos de entrada y salida.',
+    },
   ],
   paths: {
     '/salud': {
@@ -465,6 +469,63 @@ export const openapi = {
           400: respuestaError(
             'Título vacío, cantidad no positiva, estado desconocido, producto inexistente o stock insuficiente.',
             'No hay suficiente stock del producto',
+          ),
+        },
+      },
+    },
+
+    '/inventario': {
+      get: {
+        tags: ['Inventario'],
+        summary: 'Consultar el saldo de todos los productos',
+        description:
+          'El saldo de cada producto es la suma de sus ENTRADAS menos sus SALIDAS. Los productos ' +
+          'sin movimientos aparecen con saldo 0.',
+        responses: {
+          200: {
+            description: 'Saldo por producto, en el orden del catálogo.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/SaldoProductoDTO' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+
+    '/inventario/{productoId}': {
+      get: {
+        tags: ['Inventario'],
+        summary: 'Consultar el saldo de un producto',
+        parameters: [
+          {
+            name: 'productoId',
+            in: 'path',
+            required: true,
+            description: 'Id del producto.',
+            schema: { type: 'integer', minimum: 1, example: 1 },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Saldo del producto.',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/SaldoProductoDTO' },
+              },
+            },
+          },
+          400: respuestaError(
+            'El productoId no es un entero positivo.',
+            'productoId inválido',
+          ),
+          404: respuestaError(
+            'No existe un producto con ese id.',
+            'No existe el producto 42',
           ),
         },
       },

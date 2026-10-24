@@ -6,6 +6,7 @@ import { entorno } from '../infraestructura/configuracion/entorno'
 import { CrearProducto } from '../aplicacion/casos-uso/productos/CrearProducto'
 import { ConsultarProductos } from '../aplicacion/casos-uso/productos/ConsultarProductos'
 import { ActualizarProducto } from '../aplicacion/casos-uso/productos/ActualizarProducto'
+import { ConsultarInventario } from '../aplicacion/casos-uso/inventario/ConsultarInventario'
 import { CrearTicket } from '../aplicacion/casos-uso/tickets/CrearTicket'
 import { ConsultarTickets } from '../aplicacion/casos-uso/tickets/ConsultarTickets'
 import { RegistrarUsuario } from '../aplicacion/casos-uso/usuarios/RegistrarUsuario'
@@ -14,6 +15,7 @@ import { IniciarSesion } from '../aplicacion/casos-uso/usuarios/IniciarSesion'
 import { RepositorioProductoSqlServer } from '../infraestructura/persistencia/sqlserver/RepositorioProductoSqlServer'
 import { RepositorioTicketSqlServer } from '../infraestructura/persistencia/sqlserver/RepositorioTicketSqlServer'
 import { RepositorioUsuarioSqlServer } from '../infraestructura/persistencia/sqlserver/RepositorioUsuarioSqlServer'
+import { RepositorioMovimientoSqlServer } from '../infraestructura/persistencia/sqlserver/RepositorioMovimientoSqlServer'
 
 import { ClavesBcrypt } from '../infraestructura/seguridad/ClavesBcrypt'
 import { TokensJwt } from '../infraestructura/seguridad/TokensJwt'
@@ -21,6 +23,7 @@ import { TokensJwt } from '../infraestructura/seguridad/TokensJwt'
 import { AutenticacionController } from '../infraestructura/http/controladores/AutenticacionController'
 import { ProductoController } from '../infraestructura/http/controladores/ProductoController'
 import { TicketController } from '../infraestructura/http/controladores/TicketController'
+import { InventarioController } from '../infraestructura/http/controladores/InventarioController'
 
 import { crearServidor } from '../infraestructura/http/servidor'
 
@@ -28,6 +31,7 @@ import { crearServidor } from '../infraestructura/http/servidor'
 const productos = new RepositorioProductoSqlServer()
 const tickets = new RepositorioTicketSqlServer()
 const usuarios = new RepositorioUsuarioSqlServer()
+const movimientos = new RepositorioMovimientoSqlServer()
 
 const claves = new ClavesBcrypt()
 const tokens = new TokensJwt(entorno.jwtSecret)
@@ -50,10 +54,15 @@ const ticketController = new TicketController(
   new ConsultarTickets(tickets),
 )
 
+const inventarioController = new InventarioController(
+  new ConsultarInventario(movimientos, productos),
+)
+
 const app = crearServidor({
   autenticacion: autenticacionController,
   productos: productoController,
   tickets: ticketController,
+  inventario: inventarioController,
   tokens,
 })
 
