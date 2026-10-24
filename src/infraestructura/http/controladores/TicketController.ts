@@ -8,7 +8,11 @@ import {
   esEstadoTicket,
 } from '../../../dominio/modelo/EstadoTicket'
 
-import { CrearTicket } from '../../../aplicacion/casos-uso/tickets/CrearTicket'
+import {
+  CrearTicket,
+  ProductoInexistente,
+  StockInsuficiente,
+} from '../../../aplicacion/casos-uso/tickets/CrearTicket'
 import { ConsultarTickets } from '../../../aplicacion/casos-uso/tickets/ConsultarTickets'
 
 export class TicketController {
@@ -40,9 +44,20 @@ export class TicketController {
 
       res.status(201).json(ticket)
     } catch (error) {
-      // Las reglas de CrearTicket (título vacío, cantidad
-      // inválida, producto inexistente, stock insuficiente)
-      // son errores del solicitante, no del servidor.
+      // Cada error de dominio lleva su propia identidad, así
+      // que el código HTTP sale de la clase y no del texto.
+      if (error instanceof ProductoInexistente) {
+        res.status(404).json({ error: error.message })
+        return
+      }
+
+      if (error instanceof StockInsuficiente) {
+        res.status(409).json({ error: error.message })
+        return
+      }
+
+      // El resto son validaciones de entrada (título vacío,
+      // cantidad inválida): culpa del solicitante.
       if (error instanceof Error) {
         res.status(400).json({ error: error.message })
         return
