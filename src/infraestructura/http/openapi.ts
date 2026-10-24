@@ -104,6 +104,24 @@ const respuestaError = (description: string, ejemplo: string) => ({
   },
 })
 
+const idTicket = {
+  name: 'id',
+  in: 'path',
+  required: true,
+  description: 'Identificador numérico del ticket.',
+  schema: { type: 'integer', minimum: 1 },
+  example: 1,
+}
+
+const respuestaTicket = (description: string) => ({
+  description,
+  content: {
+    'application/json': {
+      schema: { $ref: '#/components/schemas/TicketDTO' },
+    },
+  },
+})
+
 export const openapi = {
   openapi: '3.0.3',
   info: {
@@ -434,6 +452,61 @@ export const openapi = {
           400: respuestaError(
             'Título vacío, cantidad no positiva, estado desconocido, producto inexistente o stock insuficiente.',
             'No hay suficiente stock del producto',
+          ),
+        },
+      },
+    },
+
+    '/tickets/{id}': {
+      put: {
+        tags: ['Tickets'],
+        summary: 'Editar un ticket',
+        description: [
+          'Aplica cambios **parciales**: solo se modifican los campos enviados.',
+          '',
+          '- Solo se puede editar un ticket en estado `PENDIENTE`.',
+          '- El `estado` no se edita aquí; se cambia con las rutas de ciclo de vida.',
+          '- El título no puede quedar vacío y la cantidad debe ser un entero mayor que cero.',
+          '- Si cambia el producto o la cantidad, el producto debe existir y tener stock suficiente.',
+          '- Debe enviarse al menos un campo editable.',
+        ].join('\n'),
+        parameters: [idTicket],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                minProperties: 1,
+                properties: {
+                  titulo: {
+                    type: 'string',
+                    example: 'Teclado para sala de juntas (urgente)',
+                  },
+                  descripcion: {
+                    type: 'string',
+                    example: 'Reemplazo del equipo dañado',
+                  },
+                  productoId: { type: 'integer', minimum: 1, example: 1 },
+                  cantidad: { type: 'integer', minimum: 1, example: 3 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: respuestaTicket('Ticket editado.'),
+          400: respuestaError(
+            'id inválido, cuerpo sin campos, campo inválido o se intentó cambiar el estado.',
+            'La cantidad debe ser un entero mayor que cero',
+          ),
+          404: respuestaError(
+            'No existe el ticket, o no existe el producto indicado.',
+            'No existe el ticket 42',
+          ),
+          409: respuestaError(
+            'El ticket no está PENDIENTE, o el producto no tiene stock suficiente.',
+            'Un ticket en estado APROBADO ya no se puede editar; solo los PENDIENTE',
           ),
         },
       },

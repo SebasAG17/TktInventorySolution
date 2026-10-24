@@ -14,5 +14,7 @@ export function ticketRoutes(
 
   router.get('/', controller.consultarTodos)
 
+  router.put('/:id', controller.editar)
+
   return router
 }

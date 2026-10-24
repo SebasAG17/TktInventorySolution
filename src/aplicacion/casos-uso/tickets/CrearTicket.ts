@@ -11,6 +11,20 @@ import type {
   RepositorioProducto,
 } from '../../../dominio/puertos/RepositorioProducto'
 
+export class ProductoInexistente extends Error {
+  constructor(id: number) {
+    super(`No existe el producto ${id}`)
+  }
+}
+
+export class StockInsuficiente extends Error {
+  constructor(cantidad: number, stock: number) {
+    super(
+      `No hay suficiente stock: se solicitaron ${cantidad} y hay ${stock}`,
+    )
+  }
+}
+
 /**
  * Caso de uso para crear un ticket.
  */
@@ -34,11 +48,11 @@ export class CrearTicket {
     )
 
     if (!producto) {
-      throw new Error('El producto no existe')
+      throw new ProductoInexistente(datos.productoId)
     }
 
     if (producto.stock < datos.cantidad) {
-      throw new Error('No hay suficiente stock del producto')
+      throw new StockInsuficiente(datos.cantidad, producto.stock)
     }
 
     return this.tickets.crear({

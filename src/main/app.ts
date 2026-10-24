@@ -7,6 +7,7 @@ import { CrearProducto } from '../aplicacion/casos-uso/productos/CrearProducto'
 import { ConsultarProductos } from '../aplicacion/casos-uso/productos/ConsultarProductos'
 import { CrearTicket } from '../aplicacion/casos-uso/tickets/CrearTicket'
 import { ConsultarTickets } from '../aplicacion/casos-uso/tickets/ConsultarTickets'
+import { EditarTicket } from '../aplicacion/casos-uso/tickets/EditarTicket'
 import { RegistrarUsuario } from '../aplicacion/casos-uso/usuarios/RegistrarUsuario'
 import { IniciarSesion } from '../aplicacion/casos-uso/usuarios/IniciarSesion'
 
@@ -46,6 +47,7 @@ const productoController = new ProductoController(
 const ticketController = new TicketController(
   new CrearTicket(tickets, productos),
   new ConsultarTickets(tickets),
+  new EditarTicket(tickets, productos),
 )
 
 const app = crearServidor({
